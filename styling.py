@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics.pairwise import cosine_similarity
+import os
 
 # Import the EVRecommendationSystem class
 class EVRecommendationSystem:
@@ -153,6 +154,10 @@ st.set_page_config(page_title="BikeSetu - Best Electric Scooter Deals", layout="
 if 'page' not in st.session_state:
     st.session_state.page = 'home'
 
+# Remove unused server tracking code
+if 'server_process' in st.session_state:
+    st.session_state.pop('server_process')
+
 # Navigation functions
 def go_to_recommendations():
     st.session_state.page = 'recommendations'
@@ -162,6 +167,9 @@ def go_to_chat():
 
 def go_to_home():
     st.session_state.page = 'home'
+    
+def go_to_tracking():
+    st.session_state.page = 'tracking'
 
 # Custom CSS styling
 st.markdown("""
@@ -211,35 +219,43 @@ st.markdown("""
             margin-top: 30px;
             display: flex;
             gap: 15px;
+            flex-wrap: wrap;
         }
-        .track-btn, .recommend-btn, .chat-btn, .back-btn {
-            padding: 14px 28px;
-            font-size: 16px;
-            border-radius: 10px;
-            border: none;
-            cursor: pointer;
-            transition: 0.3s ease;
+        /* Custom button styles for Streamlit buttons */
+        .stButton > button {
+            padding: 14px 28px !important;
+            font-size: 16px !important;
+            border-radius: 10px !important;
+            border: none !important;
+            cursor: pointer !important;
+            transition: 0.3s ease !important;
+            width: 100% !important;
+            height: auto !important;
+            margin: 0 !important;
         }
-        .track-btn {
-            background-color: #222;
-            color: white;
+        /* Track button styling */
+        .track-btn > button {
+            background-color: #222 !important;
+            color: white !important;
         }
-        .track-btn:hover {
-            background-color: #444;
+        .track-btn > button:hover {
+            background-color: #444 !important;
         }
-        .recommend-btn, .chat-btn {
-            background-color: white;
-            color: black;
+        /* Recommendation button styling */
+        .recommend-btn > button {
+            background-color: white !important;
+            color: black !important;
         }
-        .recommend-btn:hover, .chat-btn:hover {
-            background-color: #f1f1f1;
+        .recommend-btn > button:hover {
+            background-color: #f1f1f1 !important;
         }
-        .chat-btn {
-            background-color: #4CAF50;
-            color: white;
+        /* Chat button styling */
+        .chat-btn > button {
+            background-color: #4CAF50 !important;
+            color: white !important;
         }
-        .chat-btn:hover {
-            background-color: #45a049;
+        .chat-btn > button:hover {
+            background-color: #45a049 !important;
         }
         .back-btn {
             background-color: #f44336;
@@ -261,7 +277,7 @@ st.markdown("""
             border-radius: 50%;
             box-shadow: 0 0 30px rgba(255, 136, 0, 0.3);
         }
-        .recommendation-section {
+        .recommendation-section, .tracking-section {
             background-color: #f5f5f5;
             padding: 30px;
             border-radius: 15px;
@@ -283,6 +299,17 @@ st.markdown("""
             justify-content: center;
             margin-top: 20px;
         }
+        .map-container {
+            height: 600px;
+            width: 100%;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        /* Hide the Streamlit branding */
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        .viewerBadge_container__r5tak {display: none;}
     </style>
 """, unsafe_allow_html=True)
 
@@ -290,6 +317,7 @@ st.markdown("""
 st.sidebar.markdown("---")
 st.sidebar.header("Navigation")
 st.sidebar.button("Home", on_click=go_to_home)
+st.sidebar.button("Track My Scooter", on_click=go_to_tracking)
 st.sidebar.button("AI Recommendations", on_click=go_to_recommendations)
 st.sidebar.button("Chat with Us", on_click=go_to_chat)
 
@@ -316,28 +344,148 @@ if st.session_state.page == 'home':
         st.markdown("""
             <div class="main-text">
                 <h1>BEST DEALS<br>ON ELECTRIC SCOOTERS</h1>
-                <div class="btn-container">
-                    <button class="track-btn" id="track_btn">Track</button>
-                    <button class="recommend-btn" id="recommend_btn">AI-Recommendation</button>
-                    <button class="chat-btn" id="chat_btn">Chat with Us</button>
-                </div>
             </div>
         """, unsafe_allow_html=True)
         
-        # Button click handlers in Python
-        if st.button("AI-Recommendation", key="ai_rec_btn"):
-            st.session_state.page = 'recommendations'
-            st.experimental_rerun()
+        # Single set of buttons with styled containers
+        st.markdown("<div class='btn-container'>", unsafe_allow_html=True)
+        
+        col1_buttons, col2_buttons, col3_buttons = st.columns(3)
+        
+        with col1_buttons:
+            st.markdown("<div class='track-btn'>", unsafe_allow_html=True)
+            if st.button("Track My Scooter", key="track_btn"):
+                st.session_state.page = 'tracking'
+                st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
+                
+        with col2_buttons:
+            st.markdown("<div class='recommend-btn'>", unsafe_allow_html=True)
+            if st.button("AI-Recommendation", key="ai_rec_btn"):
+                st.session_state.page = 'recommendations'
+                st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
             
-        if st.button("Chat with Us", key="main_chat_btn"):
-            st.session_state.page = 'chat'
-            st.experimental_rerun()
+        with col3_buttons:
+            st.markdown("<div class='chat-btn'>", unsafe_allow_html=True)
+            if st.button("Chat with Us", key="main_chat_btn"):
+                st.session_state.page = 'chat'
+                st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+        st.markdown("</div>", unsafe_allow_html=True)
 
     with col2:
         st.markdown("<div class='scooter-img-container'>", unsafe_allow_html=True)
         st.image("scooter2.png", use_column_width=False, width=350)
         st.markdown("</div>", unsafe_allow_html=True)
 
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# TRACKING PAGE
+elif st.session_state.page == 'tracking':
+    st.markdown("<div style='padding: 20px;'>", unsafe_allow_html=True)
+    
+    # Back button
+    if st.button("← Back to Home", key="back_from_tracking"):
+        st.session_state.page = 'home'
+        st.rerun()
+    
+    st.markdown("<div class='tracking-section'>", unsafe_allow_html=True)
+    st.header("Track Your Electric Scooter")
+    st.write("Real-time tracking of your scooter's location. Keep an eye on your vehicle wherever you are.")
+    
+    # Display the map directly using HTML/JavaScript
+    html_content = """
+    <div style="height:500px;width:100%;margin-bottom:20px;">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+        
+        <div id="map" style="height:100%;width:100%;border-radius:10px;"></div>
+        
+        <script>
+            // Define a custom icon for the scooter
+            var scooterIcon = L.icon({
+                iconUrl: 'https://cdn-icons-png.flaticon.com/512/3157/3157208.png',
+                iconSize: [38, 38],
+                iconAnchor: [19, 19],
+                popupAnchor: [0, -15]
+            });
+            
+            // Initialize the map
+            var map = L.map('map').setView([19.0760, 72.8777], 13); // Mumbai coordinates as example
+            
+            // Add OpenStreetMap tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            
+            // Add the scooter marker
+            var marker = L.marker([19.0760, 72.8777], {icon: scooterIcon}).addTo(map);
+            marker.bindPopup("<b>Your Scooter</b><br>Battery: 87%<br>Last Updated: Just now").openPopup();
+            
+            // Simulate movement (for demo purposes)
+            var startLat = 19.0760;
+            var startLng = 72.8777;
+            var counter = 0;
+            
+            function updateMarker() {
+                // Simulate small movement
+                startLat += (Math.random() - 0.5) * 0.001;
+                startLng += (Math.random() - 0.5) * 0.001;
+                
+                // Update marker position
+                marker.setLatLng([startLat, startLng]);
+                
+                // Update popup content
+                counter++;
+                marker.setPopupContent("<b>Your Scooter</b><br>Battery: " + (87 - counter/10) + "%<br>Last Updated: Just now");
+                
+                // Center the map on the marker
+                map.setView([startLat, startLng], 13);
+                
+                // Schedule the next update
+                setTimeout(updateMarker, 5000);
+            }
+            
+            // Start updating the marker
+            setTimeout(updateMarker, 5000);
+        </script>
+    </div>
+    """
+    
+    st.components.v1.html(html_content, height=500)
+    
+    # Additional tracking controls in columns for better layout
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("Battery Level", "87%")
+    
+    with col2:
+        st.metric("Last Updated", "Just now")
+    
+    with col3:
+        st.metric("Distance", "2.3 km")
+    
+    # Show notification settings
+    with st.expander("Notification Settings"):
+        st.checkbox("Notify when scooter moves", value=True)
+        st.checkbox("Notify on low battery", value=True)
+        st.checkbox("Notify when scooter is outside geofence", value=False)
+    
+    # Add a route history section
+    with st.expander("Route History"):
+        history_data = {
+            'Date': ['March 19, 2025', 'March 18, 2025', 'March 17, 2025'],
+            'From': ['Home', 'Office', 'Home'],
+            'To': ['Office', 'Home', 'Market'],
+            'Distance': ['5.2 km', '5.5 km', '3.1 km'],
+            'Duration': ['25 min', '28 min', '15 min']
+        }
+        st.dataframe(pd.DataFrame(history_data))
+    
+    st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
 # RECOMMENDATIONS PAGE
@@ -347,7 +495,7 @@ elif st.session_state.page == 'recommendations':
     # Back button
     if st.button("← Back to Home", key="back_from_rec"):
         st.session_state.page = 'home'
-        st.experimental_rerun()
+        st.rerun()
     
     st.markdown("<div class='recommendation-section'>", unsafe_allow_html=True)
     st.header("Electric Vehicle Recommendations")
@@ -455,7 +603,7 @@ elif st.session_state.page == 'chat':
     # Back button
     if st.button("← Back to Home", key="back_from_chat"):
         st.session_state.page = 'home'
-        st.experimental_rerun()
+        st.rerun()
     
     st.markdown("<div class='chat-section'>", unsafe_allow_html=True)
     st.header("Chat with Our Support Team")
