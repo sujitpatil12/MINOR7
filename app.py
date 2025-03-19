@@ -288,3 +288,23 @@ if system_loaded:
         st.write("Price vs Range")
         price_range_df = recommender.df[['PriceEuro', 'Range_Km']].rename(columns={'PriceEuro': 'Price (€)', 'Range_Km': 'Range (km)'})
         st.scatter_chart(price_range_df)
+
+        # Chatbot Integration
+st.sidebar.markdown("---")
+st.sidebar.header("Need Help?")
+
+if "show_chat" not in st.session_state:
+    st.session_state.show_chat = False
+
+def toggle_chat():
+    st.session_state.show_chat = not st.session_state.show_chat
+
+st.sidebar.button("Chat with Us", on_click=toggle_chat)
+
+if st.session_state.show_chat:
+    st.components.v1.iframe(
+        "https://cdn.botpress.cloud/webchat/v2.2/shareable.html?configUrl=https://files.bpcontent.cloud/2025/03/18/15/20250318152422-PDTBA3BR.json",
+        width=350,
+        height=500,
+        scrolling=False
+    )
