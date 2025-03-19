@@ -149,16 +149,19 @@ def load_recommender():
 # Page configuration
 st.set_page_config(page_title="BikeSetu - Best Electric Scooter Deals", layout="wide")
 
-# Initialize session state for showing the recommendation section
-if 'show_recommendations' not in st.session_state:
-    st.session_state.show_recommendations = False
+# Initialize session state for navigation
+if 'page' not in st.session_state:
+    st.session_state.page = 'home'
 
-# Initialize session state for chatbot
-if "show_chat" not in st.session_state:
-    st.session_state.show_chat = False
+# Navigation functions
+def go_to_recommendations():
+    st.session_state.page = 'recommendations'
 
-def toggle_chat():
-    st.session_state.show_chat = not st.session_state.show_chat
+def go_to_chat():
+    st.session_state.page = 'chat'
+
+def go_to_home():
+    st.session_state.page = 'home'
 
 # Custom CSS styling
 st.markdown("""
@@ -209,7 +212,7 @@ st.markdown("""
             display: flex;
             gap: 15px;
         }
-        .track-btn, .recommend-btn, .chat-btn {
+        .track-btn, .recommend-btn, .chat-btn, .back-btn {
             padding: 14px 28px;
             font-size: 16px;
             border-radius: 10px;
@@ -238,6 +241,14 @@ st.markdown("""
         .chat-btn:hover {
             background-color: #45a049;
         }
+        .back-btn {
+            background-color: #f44336;
+            color: white;
+            margin-bottom: 20px;
+        }
+        .back-btn:hover {
+            background-color: #d32f2f;
+        }
         .scooter-img-container {
             display: flex;
             justify-content: center;
@@ -250,24 +261,39 @@ st.markdown("""
             border-radius: 50%;
             box-shadow: 0 0 30px rgba(255, 136, 0, 0.3);
         }
-        .chatbot-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 1000;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        .recommendation-section {
+            background-color: #f5f5f5;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 20px;
+            color: black;
+        }
+        .chat-section {
+            background-color: #f5f5f5;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px auto;
+            max-width: 800px;
+            color: black;
+            text-align: center;
+        }
+        .chat-container {
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
         }
     </style>
 """, unsafe_allow_html=True)
 
-# Sidebar for chatbot
+# Sidebar
 st.sidebar.markdown("---")
-st.sidebar.header("Need Help?")
-st.sidebar.button("Chat with Us", on_click=toggle_chat)
+st.sidebar.header("Navigation")
+st.sidebar.button("Home", on_click=go_to_home)
+st.sidebar.button("AI Recommendations", on_click=go_to_recommendations)
+st.sidebar.button("Chat with Us", on_click=go_to_chat)
 
-# Header
+# Header (shown on all pages)
 st.markdown("""
     <div class="header">
         <div class="logo">BIKESETU</div>
@@ -279,74 +305,49 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# Main content container
-st.markdown("<div class='main-container'>", unsafe_allow_html=True)
+# HOME PAGE
+if st.session_state.page == 'home':
+    # Main content container
+    st.markdown("<div class='main-container'>", unsafe_allow_html=True)
 
-col1, col2 = st.columns([1, 1])
+    col1, col2 = st.columns([1, 1])
 
-with col1:
-    st.markdown("""
-        <div class="main-text">
-            <h1>BEST DEALS<br>ON ELECTRIC SCOOTERS</h1>
-            <div class="btn-container">
-                <button class="track-btn" id="track_btn">Track</button>
-                <button class="recommend-btn" id="recommend_btn" onclick="handleRecommendClick()">AI-Recommendation</button>
+    with col1:
+        st.markdown("""
+            <div class="main-text">
+                <h1>BEST DEALS<br>ON ELECTRIC SCOOTERS</h1>
+                <div class="btn-container">
+                    <button class="track-btn" id="track_btn">Track</button>
+                    <button class="recommend-btn" id="recommend_btn">AI-Recommendation</button>
+                    <button class="chat-btn" id="chat_btn">Chat with Us</button>
+                </div>
             </div>
-        </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
+        
+        # Button click handlers in Python
+        if st.button("AI-Recommendation", key="ai_rec_btn"):
+            st.session_state.page = 'recommendations'
+            st.experimental_rerun()
+            
+        if st.button("Chat with Us", key="main_chat_btn"):
+            st.session_state.page = 'chat'
+            st.experimental_rerun()
 
-    # JavaScript to handle button clicks
-    st.markdown("""
-    <script>
-    function handleRecommendClick() {
-        // Using Streamlit's session state to show recommendations
-        window.parent.postMessage({
-            type: "streamlit:setComponentValue",
-            value: true
-        }, "*");
-    }
-    </script>
-    """, unsafe_allow_html=True)
+    with col2:
+        st.markdown("<div class='scooter-img-container'>", unsafe_allow_html=True)
+        st.image("scooter2.png", use_column_width=False, width=350)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# RECOMMENDATIONS PAGE
+elif st.session_state.page == 'recommendations':
+    st.markdown("<div style='padding: 20px;'>", unsafe_allow_html=True)
     
-    # Button click handler in Python
-    if st.button("AI-Recommendation", key="ai_rec_btn"):
-        st.session_state.show_recommendations = True
-
-    # Chat button on main page
-    if st.button("Chat with Us", key="main_chat_btn", on_click=toggle_chat):
-        pass  # The toggle_chat function will be called via on_click
-
-with col2:
-    st.markdown("<div class='scooter-img-container'>", unsafe_allow_html=True)
-    st.image("scooter2.png", use_column_width=False, width=350)
-    st.markdown("</div>", unsafe_allow_html=True)
-
-st.markdown("</div>", unsafe_allow_html=True)
-
-# Display chatbot if toggled on
-if st.session_state.show_chat:
-    st.markdown("<div class='chatbot-container'>", unsafe_allow_html=True)
-    st.components.v1.iframe(
-        "https://cdn.botpress.cloud/webchat/v2.2/shareable.html?configUrl=https://files.bpcontent.cloud/2025/03/18/15/20250318152422-PDTBA3BR.json",
-        width=350,
-        height=500,
-        scrolling=False
-    )
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# Display recommendations section if button was clicked
-if st.session_state.show_recommendations:
-    st.markdown("""
-    <style>
-    .recommendation-section {
-        background-color: #f5f5f5;
-        padding: 30px;
-        border-radius: 15px;
-        margin-top: 50px;
-        color: black;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+    # Back button
+    if st.button("← Back to Home", key="back_from_rec"):
+        st.session_state.page = 'home'
+        st.experimental_rerun()
     
     st.markdown("<div class='recommendation-section'>", unsafe_allow_html=True)
     st.header("Electric Vehicle Recommendations")
@@ -444,4 +445,30 @@ if st.session_state.show_recommendations:
     except Exception as e:
         st.error(f"Error loading the recommendation system: {e}")
     
+    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# CHATBOT PAGE
+elif st.session_state.page == 'chat':
+    st.markdown("<div style='padding: 20px;'>", unsafe_allow_html=True)
+    
+    # Back button
+    if st.button("← Back to Home", key="back_from_chat"):
+        st.session_state.page = 'home'
+        st.experimental_rerun()
+    
+    st.markdown("<div class='chat-section'>", unsafe_allow_html=True)
+    st.header("Chat with Our Support Team")
+    st.write("Our AI assistant is ready to help you with any questions about electric scooters.")
+    
+    st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
+    st.components.v1.iframe(
+        "https://cdn.botpress.cloud/webchat/v2.2/shareable.html?configUrl=https://files.bpcontent.cloud/2025/03/18/15/20250318152422-PDTBA3BR.json",
+        width=500,
+        height=600,
+        scrolling=False
+    )
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
